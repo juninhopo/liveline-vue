@@ -33,7 +33,7 @@ const regions = [
 ]
 
 // 3 — price feed (mid) on a tinted custom background
-const pxWindow = ref(300)
+const pxWindow = ref(60)
 const pxData = ref<LivelinePoint[]>([])
 const pxValue = ref(0)
 const pxBuf: LivelinePoint[] = []
@@ -52,7 +52,8 @@ function tick(t: number) {
     r.buf.push({ time: t, value: r.level })
   }
 
-  pxLevel += (Math.random() - 0.5) * 0.004
+  // mean-revert around 5.08 so it crosses the threshold both ways
+  pxLevel += (5.08 - pxLevel) * 0.03 + (Math.random() - 0.5) * 0.012
   pxBuf.push({ time: t, value: pxLevel })
 
   const cutoff = t - 3600
@@ -85,24 +86,24 @@ onBeforeUnmount(() => clearInterval(timer))
 
     <section class="card">
       <div class="card-head">
-        <div class="title">REQUESTS / SEC</div>
-        <div class="sub">single series · <code>threshold-colors</code> — green above 1k/s, red below · live badge</div>
+        <div class="title">USD / BRL</div>
+        <div class="sub">single series · <code>threshold-colors</code> — green above R$ 5.08, red below · live badge</div>
       </div>
       <div class="chart">
         <Liveline
-          :data="reqData"
-          :value="reqValue"
+          :data="pxData"
+          :value="pxValue"
           color="#16a34a"
           theme="light"
           grid
           fill
           show-value
-          :window="reqWindow"
+          :window="pxWindow"
           :windows="windows"
-          :reference-line="{ value: 1000, label: '1k/s' }"
-          :threshold-colors="{ value: 1000, above: '#16a34a', below: '#dc2626' }"
-          :format-value="(v: number) => `${Math.round(v).toLocaleString('en-US')}/s`"
-          @window-change="(s: number) => (reqWindow = s)"
+          :reference-line="{ value: 5.08, label: 'R$ 5,08' }"
+          :threshold-colors="{ value: 5.08, above: '#16a34a', below: '#dc2626' }"
+          :format-value="(v: number) => `R$ ${v.toFixed(4)}`"
+          @window-change="(s: number) => (pxWindow = s)"
         />
       </div>
     </section>
@@ -131,22 +132,24 @@ onBeforeUnmount(() => clearInterval(timer))
 
     <section class="card">
       <div class="card-head">
-        <div class="title">USD / BRL</div>
-        <div class="sub">custom <code>background</code> prop · any CSS color, edge-fade matches</div>
+        <div class="title">REQUESTS / SEC</div>
+        <div class="sub">single series · <code>threshold-colors</code> — green above 1k/s, red below · live badge</div>
       </div>
       <div class="chart">
         <Liveline
-          :data="pxData"
-          :value="pxValue"
-          color="#7c3aed"
+          :data="reqData"
+          :value="reqValue"
+          color="#16a34a"
           theme="light"
-          background="#faf5ff"
           grid
+          fill
           show-value
-          :window="pxWindow"
+          :window="reqWindow"
           :windows="windows"
-          :format-value="(v: number) => `R$ ${v.toFixed(4)}`"
-          @window-change="(s: number) => (pxWindow = s)"
+          :reference-line="{ value: 1000, label: '1k/s' }"
+          :threshold-colors="{ value: 1000, above: '#16a34a', below: '#dc2626' }"
+          :format-value="(v: number) => `${Math.round(v).toLocaleString('en-US')}/s`"
+          @window-change="(s: number) => (reqWindow = s)"
         />
       </div>
     </section>
