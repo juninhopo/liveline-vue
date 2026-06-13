@@ -21,9 +21,11 @@ function rgba(r: number, g: number, b: number, a: number): string {
  * Derive a full palette from a single accent color + theme mode.
  * Momentum colors are always semantic green/red regardless of accent.
  */
-export function resolveTheme(color: string, mode: ThemeMode): LivelinePalette {
+export function resolveTheme(color: string, mode: ThemeMode, background?: string): LivelinePalette {
   const [r, g, b] = parseColorRgb(color)
   const isDark = mode === 'dark'
+  // When a custom background is given, fade edge labels toward IT (not the theme default).
+  const customBg: [number, number, number] | null = background ? parseColorRgb(background) : null
 
   return {
     // Line
@@ -69,7 +71,7 @@ export function resolveTheme(color: string, mode: ThemeMode): LivelinePalette {
     tooltipBorder: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.08)',
 
     // Background
-    bgRgb: isDark ? [10, 10, 10] as [number, number, number] : [255, 255, 255] as [number, number, number],
+    bgRgb: customBg ?? (isDark ? [10, 10, 10] as [number, number, number] : [255, 255, 255] as [number, number, number]),
 
     // Fonts
     labelFont: '11px "SF Mono", Menlo, Monaco, "Cascadia Code", monospace',
@@ -94,12 +96,13 @@ export const SERIES_COLORS = [
 export function resolveSeriesPalettes(
   series: LivelineSeries[],
   mode: ThemeMode,
+  background?: string,
 ): Map<string, LivelinePalette> {
   const map = new Map<string, LivelinePalette>()
   for (let i = 0; i < series.length; i++) {
     const s = series[i]
     const color = s.color || SERIES_COLORS[i % SERIES_COLORS.length]
-    map.set(s.id, resolveTheme(color, mode))
+    map.set(s.id, resolveTheme(color, mode, background))
   }
   return map
 }

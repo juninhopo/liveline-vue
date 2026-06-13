@@ -38,6 +38,8 @@ export interface EngineConfig {
   badgeVariant: BadgeVariant
   tooltipY: number
   tooltipOutline: boolean
+  background?: string
+  crosshairStyle?: 'inline' | 'box'
   valueMomentumColor: boolean
   valueDisplayRef?: Ref<HTMLSpanElement | null>
   orderbookData?: OrderbookData
@@ -61,6 +63,7 @@ export interface EngineConfig {
     value: number
     palette: LivelinePalette
     label?: string
+    dashed?: boolean
   }>
   isMultiSeries?: boolean
   hiddenSeriesIds?: Set<string>
@@ -611,7 +614,7 @@ export function useLivelineEngine(
 
   // Data stash for reverse morph (chart → flat line when data disappears)
   let lastData: LivelinePoint[] = []
-  let lastMultiSeries: Array<{ id: string; data: LivelinePoint[]; value: number; palette: LivelinePalette; label?: string }> = []
+  let lastMultiSeries: Array<{ id: string; data: LivelinePoint[]; value: number; palette: LivelinePalette; label?: string; dashed?: boolean }> = []
   let frozenNow = 0
 
   // Pause data snapshot — freeze visible data when pausing to prevent
@@ -817,7 +820,7 @@ export function useLivelineEngine(
       useMultiStash = !hasData && chartReveal > 0.005 && lastMultiSeries.length > 0
       if (hasMultiData && cfg.multiSeries) {
         lastMultiSeries = cfg.multiSeries.map(s => ({
-          id: s.id, data: s.data.slice(), value: s.value, palette: s.palette, label: s.label,
+          id: s.id, data: s.data.slice(), value: s.value, palette: s.palette, label: s.label, dashed: s.dashed,
         }))
       }
       // Clear multi stash when single-series data arrives
@@ -1469,7 +1472,7 @@ export function useLivelineEngine(
           if (range.max > globalMax) globalMax = range.max
         }
         // Always push to entries (drawMultiFrame skips via alpha)
-        seriesEntries.push({ visible, smoothValue: sv, palette: s.palette, label: s.label, alpha })
+        seriesEntries.push({ visible, smoothValue: sv, palette: s.palette, label: s.label, alpha, dashed: s.dashed })
       }
     }
 
@@ -1586,6 +1589,7 @@ export function useLivelineEngine(
       targetWindowSecs: cfg.windowSecs,
       tooltipY: cfg.tooltipY,
       tooltipOutline: cfg.tooltipOutline,
+      crosshairStyle: cfg.crosshairStyle,
       chartReveal,
       pauseProgress,
       now_ms,

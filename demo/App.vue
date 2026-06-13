@@ -27,9 +27,9 @@ let reqLevel = 1200
 const latWindow = ref(300)
 const latSeries = shallowRef<LivelineSeries[]>([])
 const regions = [
-  { id: 'us-east', label: 'us-east', color: '#4ade80', buf: [] as LivelinePoint[], level: 42 },
-  { id: 'eu-west', label: 'eu-west', color: '#4d9fff', buf: [] as LivelinePoint[], level: 58 },
-  { id: 'ap-south', label: 'ap-south', color: '#f59e0b', buf: [] as LivelinePoint[], level: 91 },
+  { id: 'us-east', label: 'us-east', color: '#4ade80', buf: [] as LivelinePoint[], level: 42, dashed: false },
+  { id: 'eu-west', label: 'eu-west', color: '#4d9fff', buf: [] as LivelinePoint[], level: 58, dashed: true },
+  { id: 'ap-south', label: 'ap-south', color: '#f59e0b', buf: [] as LivelinePoint[], level: 91, dashed: false },
 ]
 
 function tick(t: number) {
@@ -60,6 +60,7 @@ function tick(t: number) {
     value: r.level,
     color: r.color,
     label: r.label,
+    dashed: r.dashed,
   }))
 }
 
@@ -90,6 +91,7 @@ onBeforeUnmount(() => clearInterval(timer))
           :value="reqValue"
           color="#4ade80"
           theme="dark"
+          background="#0d1b2a"
           grid
           show-value
           :window="reqWindow"
@@ -112,6 +114,8 @@ onBeforeUnmount(() => clearInterval(timer))
           :value="0"
           :series="latSeries"
           theme="dark"
+          background="#0a0b10"
+          crosshair-style="box"
           grid
           :window="latWindow"
           :windows="windows"

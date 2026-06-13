@@ -238,6 +238,7 @@ export interface MultiSeriesEntry {
   palette: LivelinePalette
   label?: string
   alpha?: number  // series visibility alpha (0 = hidden, 1 = visible)
+  dashed?: boolean  // render this series' line dashed
 }
 
 export interface MultiSeriesDrawOptions {
@@ -259,6 +260,7 @@ export interface MultiSeriesDrawOptions {
   targetWindowSecs: number
   tooltipY: number
   tooltipOutline: boolean
+  crosshairStyle?: 'inline' | 'box'
   chartReveal: number
   pauseProgress: number
   now_ms: number
@@ -316,6 +318,7 @@ export function drawMultiFrame(
     if (combinedAlpha < 0.01) continue
     ctx.save()
     if (combinedAlpha < 1) ctx.globalAlpha = combinedAlpha
+    if (s.dashed) ctx.setLineDash([4, 3])
     const pts = drawLine(
       ctx, layout, s.palette, s.visible, s.smoothValue, opts.now,
       false, // no fill
@@ -407,6 +410,7 @@ export function drawMultiFrame(
         opts.tooltipY,
         opts.tooltipOutline,
         maxLiveDotX,
+        opts.crosshairStyle,
       )
     }
   }

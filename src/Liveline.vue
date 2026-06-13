@@ -36,6 +36,7 @@ const props = withDefaults(defineProps<LivelineProps>(), {
   valueMomentumColor: false,
   tooltipY: 14,
   tooltipOutline: true,
+  crosshairStyle: 'inline',
   lerpSpeed: 0.08,
   cursor: 'crosshair',
   pulse: true,
@@ -77,7 +78,7 @@ watchEffect(() => {
 })
 
 const palette = computed(() => {
-  const p = resolveTheme(props.color, props.theme)
+  const p = resolveTheme(props.color, props.theme, props.background)
   if (props.lineWidth != null) p.lineWidth = props.lineWidth
   return p
 })
@@ -88,7 +89,7 @@ const showSeriesToggle = computed(() => (lastSeriesProp_r.value?.length ?? 0) > 
 // Per-series palettes (memoized on series ids + colors + theme)
 const seriesPalettes = computed(() => {
   if (!props.series || props.series.length === 0) return null
-  return resolveSeriesPalettes(props.series, props.theme)
+  return resolveSeriesPalettes(props.series, props.theme, props.background)
 })
 
 // Normalized multi-series config for the engine
@@ -99,8 +100,9 @@ const multiSeries = computed(() => {
     id: s.id,
     data: s.data,
     value: s.value,
-    palette: sp.get(s.id) ?? resolveTheme(s.color || SERIES_COLORS[i % SERIES_COLORS.length], props.theme),
+    palette: sp.get(s.id) ?? resolveTheme(s.color || SERIES_COLORS[i % SERIES_COLORS.length], props.theme, props.background),
     label: s.label,
+    dashed: s.dashed,
   }))
 })
 
@@ -216,6 +218,8 @@ useLivelineEngine(canvasRef, containerRef, () => ({
   badgeVariant: props.badgeVariant,
   tooltipY: props.tooltipY,
   tooltipOutline: props.tooltipOutline,
+  background: props.background,
+  crosshairStyle: props.crosshairStyle,
   valueMomentumColor: props.valueMomentumColor,
   valueDisplayRef: props.showValue ? valueDisplayRef : undefined,
   orderbookData: props.orderbook,
@@ -467,6 +471,7 @@ const inactiveColor = computed(() => (isDark.value ? 'rgba(255,255,255,0.25)' : 
       width: '100%',
       height: '100%',
       position: 'relative',
+      background,
       ...style,
     }"
   >

@@ -6,6 +6,17 @@ export interface MultiSeriesHoverEntry {
   value: number
 }
 
+function roundRectPath(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
+  const rr = Math.min(r, w / 2, h / 2)
+  ctx.beginPath()
+  ctx.moveTo(x + rr, y)
+  ctx.arcTo(x + w, y, x + w, y + h, rr)
+  ctx.arcTo(x + w, y + h, x, y + h, rr)
+  ctx.arcTo(x, y + h, x, y, rr)
+  ctx.arcTo(x, y, x + w, y, rr)
+  ctx.closePath()
+}
+
 export function drawCrosshair(
   ctx: CanvasRenderingContext2D,
   layout: ChartLayout,
@@ -111,6 +122,7 @@ export function drawMultiCrosshair(
   tooltipY?: number,
   tooltipOutline?: boolean,
   liveDotX?: number,
+  style?: 'inline' | 'box',
 ) {
   if (scrubOpacity < 0.01 || entries.length === 0) return
 
@@ -142,6 +154,75 @@ export function drawMultiCrosshair(
   }
 
   if (scrubOpacity < 0.1 || layout.w < 300) return
+
+  // Box mode — a floating card near the cursor: timestamp header + one row per
+  // series (colored dot · label · value), instead of the inline scattered text.
+  if (style === 'box') {
+    ctx.save()
+    ctx.globalAlpha = scrubOpacity
+
+    const padX = 12
+    const padY = 10
+    const rowH = 18
+    const headerH = 19
+    const gap = 18
+    const dotW = 14
+    const timeText = formatTime(hoverTime)
+
+    ctx.font = '600 11px "SF Mono", Menlo, monospace'
+    let maxLabelW = 0
+    let maxValW = 0
+    const rows = entries.map((e) => {
+      const label = e.label ?? ''
+      const value = formatValue(e.value)
+      maxLabelW = Math.max(maxLabelW, ctx.measureText(label).width)
+      maxValW = Math.max(maxValW, ctx.measureText(value).width)
+      return { color: e.color, label, value }
+    })
+    const headerW = ctx.measureText(timeText).width
+    const contentW = Math.max(headerW, dotW + maxLabelW + gap + maxValW)
+    const boxW = contentW + padX * 2
+    const boxH = padY * 2 + headerH + rows.length * rowH
+
+    // Position: prefer to the right of the crosshair, flip left near the edge.
+    let bx = hoverX + 14
+    if (bx + boxW > layout.w - 4) bx = hoverX - 14 - boxW
+    if (bx < 4) bx = 4
+    const by = pad.top + 8
+
+    roundRectPath(ctx, bx, by, boxW, boxH, 8)
+    ctx.fillStyle = palette.tooltipBg
+    ctx.fill()
+    ctx.strokeStyle = palette.tooltipBorder
+    ctx.lineWidth = 1
+    ctx.stroke()
+
+    // Header (timestamp)
+    ctx.textAlign = 'left'
+    ctx.fillStyle = palette.gridLabel
+    ctx.fillText(timeText, bx + padX, by + padY + 10)
+
+    // Rows
+    let ry = by + padY + headerH + 10
+    for (const r of rows) {
+      ctx.beginPath()
+      ctx.arc(bx + padX + 4, ry - 4, 3.5, 0, Math.PI * 2)
+      ctx.fillStyle = r.color
+      ctx.fill()
+
+      ctx.textAlign = 'left'
+      ctx.fillStyle = palette.gridLabel
+      ctx.fillText(r.label, bx + padX + dotW, ry)
+
+      ctx.textAlign = 'right'
+      ctx.fillStyle = palette.tooltipText
+      ctx.fillText(r.value, bx + boxW - padX, ry)
+      ry += rowH
+    }
+
+    ctx.restore()
+    return
+  }
 
   // Inline text at top — same style as single-series crosshair
   // Format: "TIME  ·  ● Label Value  ·  ● Label Value"

@@ -52,6 +52,7 @@ export interface LivelineSeries {
   value: number
   color: string
   label?: string
+  dashed?: boolean  // render this series as a dashed line (e.g. a "bid"/secondary line)
 }
 
 export interface LivelineProps {
@@ -64,6 +65,10 @@ export interface LivelineProps {
   // Appearance
   theme?: ThemeMode
   color?: string
+  background?: string  // Canvas background color (any CSS color). Painted behind the chart
+                       // and used for edge label-fade so it matches on any color.
+  crosshairStyle?: 'inline' | 'box'  // Multi-series crosshair readout: inline text (default)
+                                     // or a floating box near the cursor.
 
   // Time
   window?: number
