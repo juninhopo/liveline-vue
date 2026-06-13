@@ -133,21 +133,20 @@ onBeforeUnmount(() => clearInterval(timer))
     <section class="card">
       <div class="card-head">
         <div class="title">REQUESTS / SEC</div>
-        <div class="sub">single series · <code>threshold-colors</code> — green above 1k/s, red below · live badge</div>
+        <div class="sub">single series · custom <code>background</code> prop · any CSS color, edge-fade matches</div>
       </div>
       <div class="chart">
         <Liveline
           :data="reqData"
           :value="reqValue"
-          color="#16a34a"
+          color="#7c3aed"
           theme="light"
+          background="#faf5ff"
           grid
           fill
           show-value
           :window="reqWindow"
           :windows="windows"
-          :reference-line="{ value: 1000, label: '1k/s' }"
-          :threshold-colors="{ value: 1000, above: '#16a34a', below: '#dc2626' }"
           :format-value="(v: number) => `${Math.round(v).toLocaleString('en-US')}/s`"
           @window-change="(s: number) => (reqWindow = s)"
         />
