@@ -4,9 +4,9 @@ import { Liveline } from '../src'
 import type { LivelinePoint, LivelineSeries, WindowOption } from '../src'
 
 // ── liveline-vue playground ───────────────────────────────────────────────────
-// A generic showcase: plug ANY time-series into <Liveline>. Each example below
-// feeds synthetic ticks, but in your app `data`/`series` come from a WebSocket,
-// polling, SSE — anything. Points are just { time: unixSeconds, value: number }.
+// Plug ANY time-series into <Liveline>. Each example feeds synthetic ticks, but
+// in your app `data`/`series` come from a WebSocket, polling, SSE — anything.
+// Points are just { time: unixSeconds, value: number }.
 
 const windows: WindowOption[] = [
   { label: '1m', secs: 60 },
@@ -16,52 +16,54 @@ const windows: WindowOption[] = [
   { label: 'All', secs: 0 },
 ]
 
-// ── Example 1 — a single live metric (requests / second) ──────────────────────
+// 1 — single live metric (requests / second)
 const reqWindow = ref(60)
 const reqData = ref<LivelinePoint[]>([])
 const reqValue = ref(0)
 const reqBuf: LivelinePoint[] = []
 let reqLevel = 1200
 
-// ── Example 2 — multi-series (latency per region) with a reference line (SLO) ──
+// 2 — multi-series (latency per region) with a reference line (SLO)
 const latWindow = ref(300)
 const latSeries = shallowRef<LivelineSeries[]>([])
 const regions = [
-  { id: 'us-east', label: 'us-east', color: '#4ade80', buf: [] as LivelinePoint[], level: 42, dashed: false },
-  { id: 'eu-west', label: 'eu-west', color: '#4d9fff', buf: [] as LivelinePoint[], level: 58, dashed: true },
-  { id: 'ap-south', label: 'ap-south', color: '#f59e0b', buf: [] as LivelinePoint[], level: 91, dashed: false },
+  { id: 'us-east', label: 'us-east', color: '#16a34a', buf: [] as LivelinePoint[], level: 42, dashed: false },
+  { id: 'eu-west', label: 'eu-west', color: '#2563eb', buf: [] as LivelinePoint[], level: 58, dashed: true },
+  { id: 'ap-south', label: 'ap-south', color: '#d97706', buf: [] as LivelinePoint[], level: 91, dashed: false },
 ]
 
+// 3 — price feed (mid) on a tinted custom background
+const pxWindow = ref(300)
+const pxData = ref<LivelinePoint[]>([])
+const pxValue = ref(0)
+const pxBuf: LivelinePoint[] = []
+let pxLevel = 5.085
+
 function tick(t: number) {
-  // requests/sec — random walk with the odd spike
   reqLevel += (Math.random() - 0.5) * 60
   if (Math.random() < 0.04) reqLevel += (Math.random() - 0.5) * 600
   reqLevel = Math.max(120, reqLevel)
   reqBuf.push({ time: t, value: reqLevel })
 
-  // latency per region — each drifts independently
   for (const r of regions) {
     r.level += (Math.random() - 0.5) * 6
     r.level = Math.max(8, r.level)
     r.buf.push({ time: t, value: r.level })
   }
 
-  // prune to ~1h
+  pxLevel += (Math.random() - 0.5) * 0.004
+  pxBuf.push({ time: t, value: pxLevel })
+
   const cutoff = t - 3600
-  for (const arr of [reqBuf, ...regions.map(r => r.buf)]) {
+  for (const arr of [reqBuf, pxBuf, ...regions.map(r => r.buf)]) {
     while (arr.length && arr[0]!.time < cutoff) arr.shift()
   }
 
   reqData.value = reqBuf.slice()
   reqValue.value = reqLevel
-  latSeries.value = regions.map(r => ({
-    id: r.id,
-    data: r.buf,
-    value: r.level,
-    color: r.color,
-    label: r.label,
-    dashed: r.dashed,
-  }))
+  pxData.value = pxBuf.slice()
+  pxValue.value = pxLevel
+  latSeries.value = regions.map(r => ({ id: r.id, data: r.buf, value: r.level, color: r.color, label: r.label, dashed: r.dashed }))
 }
 
 let timer: ReturnType<typeof setInterval> | undefined
@@ -83,22 +85,20 @@ onBeforeUnmount(() => clearInterval(timer))
     <section class="card">
       <div class="card-head">
         <div class="title">REQUESTS / SEC</div>
-        <div class="sub">single series · <code>showValue</code> · live badge · scrub to inspect</div>
+        <div class="sub">single series · <code>show-value</code> · live badge · scrub to inspect</div>
       </div>
       <div class="chart">
         <Liveline
           :data="reqData"
           :value="reqValue"
-          color="#4ade80"
-          theme="dark"
-          background="#0d1b2a"
+          color="#16a34a"
+          theme="light"
           grid
           show-value
           :window="reqWindow"
           :windows="windows"
           :format-value="(v: number) => `${Math.round(v).toLocaleString('en-US')}/s`"
           @window-change="(s: number) => (reqWindow = s)"
-          style="width: 100%; height: 100%"
         />
       </div>
     </section>
@@ -106,15 +106,14 @@ onBeforeUnmount(() => clearInterval(timer))
     <section class="card">
       <div class="card-head">
         <div class="title">P95 LATENCY · BY REGION</div>
-        <div class="sub">multi-series · toggle chips · reference line (SLO 80ms) · click a region to isolate</div>
+        <div class="sub">multi-series · toggle chips · <code>dashed</code> · reference line · <code>crosshair-style="box"</code></div>
       </div>
       <div class="chart">
         <Liveline
           :data="[]"
           :value="0"
           :series="latSeries"
-          theme="dark"
-          background="#0a0b10"
+          theme="light"
           crosshair-style="box"
           grid
           :window="latWindow"
@@ -122,7 +121,28 @@ onBeforeUnmount(() => clearInterval(timer))
           :reference-line="{ value: 80, label: 'SLO 80ms' }"
           :format-value="(v: number) => `${v.toFixed(0)}ms`"
           @window-change="(s: number) => (latWindow = s)"
-          style="width: 100%; height: 100%"
+        />
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-head">
+        <div class="title">USD / BRL</div>
+        <div class="sub">custom <code>background</code> prop · any CSS color, edge-fade matches</div>
+      </div>
+      <div class="chart">
+        <Liveline
+          :data="pxData"
+          :value="pxValue"
+          color="#7c3aed"
+          theme="light"
+          background="#faf5ff"
+          grid
+          show-value
+          :window="pxWindow"
+          :windows="windows"
+          :format-value="(v: number) => `R$ ${v.toFixed(4)}`"
+          @window-change="(s: number) => (pxWindow = s)"
         />
       </div>
     </section>
@@ -134,15 +154,14 @@ onBeforeUnmount(() => clearInterval(timer))
 </template>
 
 <style>
-:root { color-scheme: dark; }
 * { box-sizing: border-box; }
-body { margin: 0; background: #07080a; }
+body { margin: 0; background: #f6f7f9; }
 .page {
-  max-width: 1100px;
+  max-width: 1080px;
   margin: 0 auto;
   padding: 48px 24px 96px;
   font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
-  color: #e7e9ee;
+  color: #1a1c20;
 }
 .masthead { margin-bottom: 40px; }
 .masthead h1 {
@@ -152,43 +171,43 @@ body { margin: 0; background: #07080a; }
   margin: 0 0 6px;
   font-weight: 600;
 }
-.masthead h1 span { color: #4ade80; }
-.masthead p { margin: 0; color: #8b90a0; font-size: 13px; }
+.masthead h1 span { color: #16a34a; }
+.masthead p { margin: 0; color: #6b7180; font-size: 13px; }
 
 .card {
-  background: #0d0f13;
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: #ffffff;
+  border: 1px solid #e6e8ec;
   border-radius: 16px;
-  padding: 22px 24px 26px;
-  margin-bottom: 28px;
-  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.02) inset, 0 24px 48px -24px rgba(0, 0, 0, 0.8);
+  padding: 20px 22px 22px;
+  margin-bottom: 24px;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04), 0 8px 24px -16px rgba(16, 24, 40, 0.18);
 }
-.card-head { margin-bottom: 14px; }
+.card-head { margin-bottom: 12px; }
 .title {
   font-family: "SF Mono", ui-monospace, Menlo, monospace;
   font-weight: 700;
   letter-spacing: 0.06em;
   font-size: 14px;
-  color: #f3f4f8;
+  color: #1a1c20;
 }
 .sub {
   margin-top: 4px;
   font-size: 12px;
-  color: #6b7180;
+  color: #8a90a0;
   font-family: "SF Mono", ui-monospace, Menlo, monospace;
 }
 .sub code, .foot code {
-  color: #a9b1c2;
-  background: rgba(255, 255, 255, 0.05);
+  color: #444b5a;
+  background: #f0f1f4;
   padding: 1px 5px;
   border-radius: 4px;
 }
-.chart { height: 300px; width: 100%; }
+.chart { height: 280px; width: 100%; }
 .foot {
-  margin-top: 40px;
+  margin-top: 36px;
   text-align: center;
   font-family: "SF Mono", ui-monospace, Menlo, monospace;
   font-size: 12px;
-  color: #6b7180;
+  color: #8a90a0;
 }
 </style>

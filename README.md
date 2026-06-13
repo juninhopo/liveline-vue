@@ -38,16 +38,16 @@ const value = ref(0)                     // latest value — smoothly interpolat
 
 <template>
   <div style="height: 300px">
-    <Liveline :data="data" :value="value" color="#4ade80" theme="dark" show-value />
+    <Liveline :data="data" :value="value" color="#16a34a" theme="light" show-value />
   </div>
 </template>
 ```
 
 The component fills its parent — set a height on the parent.
 
-## Multi-series + scrub + reference line
+## Multi-series + box crosshair + reference line
 
-The crosshair follows your cursor and reads out every series at that instant. Toggle chips appear automatically for 2+ series; click one to isolate.
+The crosshair follows your cursor and reads out every series at that instant — inline, or as a floating **box** (`crosshair-style="box"`). Toggle chips appear automatically for 2+ series; click one to isolate. Mark any series `dashed` (e.g. a bid/secondary line).
 
 <p align="center">
   <img src="https://raw.githubusercontent.com/juninhopo/liveline-vue/main/docs/crosshair.png" alt="multi-series with crosshair tooltip and reference line" width="100%" />
@@ -59,7 +59,7 @@ import { ref, shallowRef } from 'vue'
 import { Liveline } from 'liveline-vue'
 import type { LivelineSeries, WindowOption } from 'liveline-vue'
 
-const series = shallowRef<LivelineSeries[]>([])   // [{ id, data, value, color, label? }]
+const series = shallowRef<LivelineSeries[]>([])   // [{ id, data, value, color, label?, dashed? }]
 const windowSecs = ref(300)
 const windows: WindowOption[] = [
   { label: '1m', secs: 60 },
@@ -74,7 +74,8 @@ const windows: WindowOption[] = [
       :data="[]"
       :value="0"
       :series="series"
-      theme="dark"
+      theme="light"
+      crosshair-style="box"
       :window="windowSecs"
       :windows="windows"
       :reference-line="{ value: 80, label: 'SLO 80ms' }"
@@ -95,9 +96,12 @@ Same surface as the React original. Highlights:
 | `series` | `LivelineSeries[]` | — | Multi-series; overrides `data`/`value` |
 | `theme` | `'light' \| 'dark'` | `'dark'` | |
 | `color` | `string` | `'#3b82f6'` | Accent; palette derived from it |
+| `background` | `string` | — | Any CSS color — fills behind the chart + matches the edge label-fade |
+| `crosshairStyle` | `'inline' \| 'box'` | `'inline'` | Multi-series readout: inline text or a floating box |
 | `window` | `number` | `30` | Visible window (seconds) |
 | `windows` | `WindowOption[]` | — | Built-in time-range buttons |
 | `referenceLine` | `{ value, label? }` | — | Dashed threshold line |
+| `series[].dashed` | `boolean` | `false` | Render a series as a dashed line |
 | `grid` · `fill` · `badge` · `momentum` · `pulse` · `scrub` | `boolean` | `true` | Feature flags |
 | `showValue` | `boolean` | `false` | Large live value overlay |
 | `exaggerate` | `boolean` | `false` | Tight Y-axis so small moves fill the height |
