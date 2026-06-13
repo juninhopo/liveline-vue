@@ -1,0 +1,67 @@
+{
+  "name": "liveline-vue",
+  "version": "0.0.1",
+  "type": "module",
+  "description": "Real-time animated charts for Vue 3 — line, candlestick, and multi-series modes. A faithful Vue port of liveline.",
+  "keywords": [
+    "vue",
+    "vue3",
+    "chart",
+    "canvas",
+    "real-time",
+    "animation",
+    "line-chart",
+    "candlestick",
+    "ohlc",
+    "multi-series",
+    "multi-line"
+  ],
+  "license": "MIT",
+  "sideEffects": false,
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "main": "./dist/liveline-vue.cjs",
+  "module": "./dist/liveline-vue.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/liveline-vue.js"
+      },
+      "require": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/liveline-vue.cjs"
+      }
+    },
+    "./package.json": "./package.json"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "typecheck": "vue-tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "prepublishOnly": "vue-tsc --noEmit && vite build"
+  },
+  "peerDependencies": {
+    "vue": "^3.3.0"
+  },
+  "devDependencies": {
+    "@types/node": "^25.9.3",
+    "@vitejs/plugin-vue": "^5.2.1",
+    "typescript": "^5.6.3",
+    "vite": "^5.4.11",
+    "vite-plugin-dts": "^4.5.0",
+    "vitest": "^2.1.8",
+    "vue": "^3.5.13",
+    "vue-tsc": "^2.1.10"
+  }
+}
