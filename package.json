@@ -1,6 +1,6 @@
 {
   "name": "liveline-vue",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "type": "module",
   "description": "Real-time animated charts for Vue 3 — line, candlestick, and multi-series modes. A faithful Vue port of liveline.",
   "keywords": [

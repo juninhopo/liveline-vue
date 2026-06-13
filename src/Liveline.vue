@@ -245,6 +245,12 @@ const inactiveColor = computed(() => (isDark.value ? 'rgba(255,255,255,0.25)' : 
 </script>
 
 <template>
+  <!-- Flex column: value display + controls take their natural height, the chart
+       container flexes to fill the rest — so it never overflows the parent box. -->
+  <div
+    :class="className"
+    :style="{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', ...style }"
+  >
   <!-- Live value display — above the chart -->
   <span
     v-if="showValue"
@@ -466,18 +472,18 @@ const inactiveColor = computed(() => (isDark.value ? 'rgba(255,255,255,0.25)' : 
 
   <div
     ref="containerRef"
-    :class="className"
     :style="{
-      width: '100%',
-      height: '100%',
       position: 'relative',
+      flex: '1 1 0%',
+      minHeight: 0,
+      width: '100%',
       background,
-      ...style,
     }"
   >
     <canvas
       ref="canvasRef"
       :style="{ display: 'block', cursor: cursorStyle }"
     />
+  </div>
   </div>
 </template>
