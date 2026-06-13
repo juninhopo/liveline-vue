@@ -2,7 +2,8 @@
 
 Real-time animated charts for **Vue 3**. Line, multi-series, and candlestick modes, canvas-rendered, 60fps, zero CSS imports.
 
-A faithful Vue port of [`liveline`](https://github.com/benjitaylor/liveline) (React) by Benji Taylor — same canvas engine, same look, Vue-idiomatic API. The framework-agnostic core (drawing, math, theming) is preserved verbatim; only the React component/hook layer was re-authored as a Vue SFC + composable.
+> **A Vue 3 port of [`liveline`](https://github.com/benjitaylor/liveline) by [Benji Taylor](https://github.com/benjitaylor).**
+> All credit for the original design and rendering engine goes to him. `liveline` (React) is the upstream project — if you use React, **use the original**: [`npm i liveline`](https://www.npmjs.com/package/liveline). This repo only re-authors the thin React component/hook layer as a Vue SFC + composable; the framework-agnostic core (canvas drawing, math, theming) is preserved **verbatim** from the original. MIT, original copyright retained.
 
 ## Install
 
@@ -57,11 +58,15 @@ See `src/types.ts` for the full typed prop list.
 
 ```bash
 npm install
-npm run dev        # demo playground (reproduces the arbitragem dashboard charts)
+npm run dev        # demo playground
 npm run typecheck  # vue-tsc
 npm run build      # library build (ES + CJS + bundled .d.ts) → dist/
 ```
 
+## Credits
+
+This is a port. The original — design, the canvas rendering engine, the entire look — is **[`liveline`](https://github.com/benjitaylor/liveline) by [Benji Taylor](https://github.com/benjitaylor)** (MIT). Please ⭐ the upstream repo. If you're on React, use [`liveline`](https://www.npmjs.com/package/liveline) directly — this package exists only to bring the same charts to Vue 3.
+
 ## License
 
-MIT. Port of `liveline` (MIT, © Benji Taylor).
+MIT — see [`LICENSE`](./LICENSE). Original copyright © 2025-2026 Benji Taylor (`liveline`); Vue port © 2026 liveline-vue contributors. The original MIT notice is retained in full.

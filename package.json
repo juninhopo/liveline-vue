@@ -49,6 +49,7 @@
     "typecheck": "vue-tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
+    "prepare": "vite build",
     "prepublishOnly": "vue-tsc --noEmit && vite build"
   },
   "peerDependencies": {
