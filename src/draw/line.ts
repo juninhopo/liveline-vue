@@ -1,4 +1,4 @@
-import type { LivelinePalette, ChartLayout, LivelinePoint } from '../types'
+import type { LivelinePalette, ChartLayout, LivelinePoint, ThresholdColors } from '../types'
 import { drawSpline } from '../math/spline'
 import { loadingY, loadingBreath, LOADING_AMPLITUDE_RATIO, LOADING_SCROLL_SPEED } from './loadingShape'
 
@@ -31,6 +31,12 @@ function blendColor(c1: string, c2: string, t: number): string {
   return `rgba(${r},${g},${b},${a.toFixed(3)})`
 }
 
+/** CSS color → rgba() string at the given alpha. */
+function withAlpha(color: string, a: number): string {
+  const [r, g, b] = parseRgba(color)
+  return `rgba(${r}, ${g}, ${b}, ${a})`
+}
+
 /** Draw the fill gradient + stroke line for a set of points. */
 function renderCurve(
   ctx: CanvasRenderingContext2D,
@@ -41,6 +47,7 @@ function renderCurve(
   lineAlpha: number = 1,
   fillAlpha: number = 1,
   strokeColor?: string,
+  fillBase?: string,
 ) {
   const { h, pad } = layout
   const baseAlpha = ctx.globalAlpha
@@ -48,8 +55,13 @@ function renderCurve(
   if (showFill && fillAlpha > 0.01) {
     ctx.globalAlpha = baseAlpha * fillAlpha
     const grad = ctx.createLinearGradient(0, pad.top, 0, h - pad.bottom)
-    grad.addColorStop(0, palette.fillTop)
-    grad.addColorStop(1, palette.fillBottom)
+    if (fillBase) {
+      grad.addColorStop(0, withAlpha(fillBase, 0.14))
+      grad.addColorStop(1, withAlpha(fillBase, 0))
+    } else {
+      grad.addColorStop(0, palette.fillTop)
+      grad.addColorStop(1, palette.fillBottom)
+    }
     ctx.beginPath()
     ctx.moveTo(pts[0][0], h - pad.bottom)
     ctx.lineTo(pts[0][0], pts[0][1])
@@ -72,6 +84,42 @@ function renderCurve(
   ctx.globalAlpha = baseAlpha
 }
 
+/**
+ * Threshold colouring: draw the curve twice, clipped to horizontal bands split
+ * at the threshold's screen-Y. Above the limit → `above` colour, below → `below`.
+ * The split lands exactly on the limit line (= the crossing point), and works
+ * for the spline + fill without per-segment interpolation.
+ */
+function renderCurveThreshold(
+  ctx: CanvasRenderingContext2D,
+  layout: ChartLayout,
+  palette: LivelinePalette,
+  pts: [number, number][],
+  showFill: boolean,
+  lineAlpha: number,
+  fillAlpha: number,
+  th: ThresholdColors,
+) {
+  const { h, pad, toY, chartW } = layout
+  const thY = Math.max(pad.top, Math.min(h - pad.bottom, toY(th.value)))
+
+  // Above the limit
+  ctx.save()
+  ctx.beginPath()
+  ctx.rect(pad.left - 1, pad.top, chartW + 2, Math.max(0, thY - pad.top))
+  ctx.clip()
+  renderCurve(ctx, layout, palette, pts, showFill, lineAlpha, fillAlpha, th.above, th.above)
+  ctx.restore()
+
+  // Below the limit
+  ctx.save()
+  ctx.beginPath()
+  ctx.rect(pad.left - 1, thY, chartW + 2, Math.max(0, (h - pad.bottom) - thY))
+  ctx.clip()
+  renderCurve(ctx, layout, palette, pts, showFill, lineAlpha, fillAlpha, th.below, th.below)
+  ctx.restore()
+}
+
 export function drawLine(
   ctx: CanvasRenderingContext2D,
   layout: ChartLayout,
@@ -87,6 +135,7 @@ export function drawLine(
   colorBlend: number = 1,
   skipDashLine: boolean = false,
   fillScale: number = 1,
+  thresholdColors?: ThresholdColors,
 ) {
   const { h, pad, toX, toY, chartW, chartH } = layout
   const incomingAlpha = ctx.globalAlpha
@@ -157,6 +206,14 @@ export function drawLine(
 
   const isScrubbing = scrubX !== null
 
+  // Threshold colouring only once fully revealed (during reveal the line blends
+  // grey→accent, so we keep the single-colour path for that transition).
+  const useThreshold = thresholdColors != null && chartReveal >= 1 && colorBlend >= 1
+  const render = (la: number, fa: number) =>
+    useThreshold
+      ? renderCurveThreshold(ctx, layout, palette, pts, showFill, la, fa, thresholdColors!)
+      : renderCurve(ctx, layout, palette, pts, showFill, la, fa, strokeColor)
+
   // Clip line + fill to chart area — during big value jumps the range
   // lerps smoothly so the line may extend beyond the chart bounds.
   // Clipping keeps it tidy while the range catches up.
@@ -171,7 +228,7 @@ export function drawLine(
     ctx.beginPath()
     ctx.rect(0, 0, scrubX!, h)
     ctx.clip()
-    renderCurve(ctx, layout, palette, pts, showFill, lineAlpha, fillAlpha, strokeColor)
+    render(lineAlpha, fillAlpha)
     ctx.restore()
 
     // Dimmed portion: clipped to RIGHT of scrub point
@@ -180,10 +237,10 @@ export function drawLine(
     ctx.rect(scrubX!, 0, layout.w - scrubX!, h)
     ctx.clip()
     ctx.globalAlpha = incomingAlpha * (1 - scrubAmount * 0.6)
-    renderCurve(ctx, layout, palette, pts, showFill, lineAlpha, fillAlpha, strokeColor)
+    render(lineAlpha, fillAlpha)
     ctx.restore()
   } else {
-    renderCurve(ctx, layout, palette, pts, showFill, lineAlpha, fillAlpha, strokeColor)
+    render(lineAlpha, fillAlpha)
   }
 
   // Restore from chart-area clip

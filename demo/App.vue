@@ -40,8 +40,9 @@ const pxBuf: LivelinePoint[] = []
 let pxLevel = 5.085
 
 function tick(t: number) {
-  reqLevel += (Math.random() - 0.5) * 60
-  if (Math.random() < 0.04) reqLevel += (Math.random() - 0.5) * 600
+  // mean-revert around 1000 so the line crosses the threshold both ways
+  reqLevel += (1000 - reqLevel) * 0.03 + (Math.random() - 0.5) * 130
+  if (Math.random() < 0.04) reqLevel += (Math.random() - 0.5) * 500
   reqLevel = Math.max(120, reqLevel)
   reqBuf.push({ time: t, value: reqLevel })
 
@@ -85,7 +86,7 @@ onBeforeUnmount(() => clearInterval(timer))
     <section class="card">
       <div class="card-head">
         <div class="title">REQUESTS / SEC</div>
-        <div class="sub">single series · <code>show-value</code> · live badge · scrub to inspect</div>
+        <div class="sub">single series · <code>threshold-colors</code> — green above 1k/s, red below · live badge</div>
       </div>
       <div class="chart">
         <Liveline
@@ -94,9 +95,12 @@ onBeforeUnmount(() => clearInterval(timer))
           color="#16a34a"
           theme="light"
           grid
+          fill
           show-value
           :window="reqWindow"
           :windows="windows"
+          :reference-line="{ value: 1000, label: '1k/s' }"
+          :threshold-colors="{ value: 1000, above: '#16a34a', below: '#dc2626' }"
           :format-value="(v: number) => `${Math.round(v).toLocaleString('en-US')}/s`"
           @window-change="(s: number) => (reqWindow = s)"
         />

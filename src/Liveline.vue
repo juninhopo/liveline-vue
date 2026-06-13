@@ -206,6 +206,7 @@ useLivelineEngine(canvasRef, containerRef, () => ({
   momentumOverride: momentumOverride.value,
   showFill: isMultiSeries.value ? false : props.fill,
   referenceLine: props.referenceLine,
+  thresholdColors: props.thresholdColors,
   formatValue: props.formatValue ?? defaultFormatValue,
   formatTime: props.formatTime ?? defaultFormatTime,
   padding: pad.value,

@@ -1,4 +1,4 @@
-import type { LivelinePalette, ChartLayout, LivelinePoint, Momentum, ReferenceLine, OrderbookData, DegenOptions, CandlePoint } from '../types'
+import type { LivelinePalette, ChartLayout, LivelinePoint, Momentum, ReferenceLine, ThresholdColors, OrderbookData, DegenOptions, CandlePoint } from '../types'
 import { drawGrid, type GridState } from './grid'
 import { drawLine } from './line'
 import { drawDot, drawArrows, drawSimpleDot, drawMultiDot } from './dot'
@@ -38,6 +38,7 @@ export interface DrawOptions {
   showPulse: boolean
   showFill: boolean
   referenceLine?: ReferenceLine
+  thresholdColors?: ThresholdColors
   hoverX: number | null
   hoverValue: number | null
   hoverTime: number | null
@@ -127,7 +128,16 @@ export function drawFrame(
 
   // 3. Line + fill (with scrub dimming + reveal morphing)
   const scrubX = opts.scrubAmount > 0.05 ? opts.hoverX : null
-  const pts = drawLine(ctx, layout, palette, opts.visible, opts.smoothValue, opts.now, opts.showFill, scrubX, opts.scrubAmount, reveal, opts.now_ms)
+  const pts = drawLine(ctx, layout, palette, opts.visible, opts.smoothValue, opts.now, opts.showFill, scrubX, opts.scrubAmount, reveal, opts.now_ms, 1, false, 1, opts.thresholdColors)
+
+  // When threshold colouring is on, the end dot follows the current above/below
+  // state (not momentum) so the tip reads coherently with the line.
+  const dotPalette = opts.thresholdColors
+    ? (() => {
+        const c = opts.smoothValue >= opts.thresholdColors.value ? opts.thresholdColors.above : opts.thresholdColors.below
+        return { ...palette, line: c, dotUp: c, dotDown: c, dotFlat: c }
+      })()
+    : palette
 
   // 4. Time axis — same timing as grid
   {
@@ -159,7 +169,7 @@ export function drawFrame(
     if (dotAlpha > 0.01) {
       ctx.save()
       if (dotAlpha < 1) ctx.globalAlpha = dotAlpha
-      drawDot(ctx, lastPt[0], lastPt[1], palette, showPulse, dotScrub, opts.now_ms)
+      drawDot(ctx, lastPt[0], lastPt[1], dotPalette, showPulse, dotScrub, opts.now_ms)
       ctx.restore()
     }
 

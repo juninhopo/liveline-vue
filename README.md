@@ -86,6 +86,18 @@ const windows: WindowOption[] = [
 </template>
 ```
 
+## Threshold colours
+
+Colour the line **and** fill by a y threshold — green above the limit, red below, split exactly on the limit line (works with the spline + fill). Great for "above target / below target" metrics.
+
+```vue
+<Liveline
+  :data="data" :value="value" fill
+  :reference-line="{ value: 1000, label: '1k/s' }"
+  :threshold-colors="{ value: 1000, above: '#16a34a', below: '#dc2626' }"
+/>
+```
+
 ## Props
 
 Same surface as the React original. Highlights:
@@ -101,6 +113,7 @@ Same surface as the React original. Highlights:
 | `window` | `number` | `30` | Visible window (seconds) |
 | `windows` | `WindowOption[]` | — | Built-in time-range buttons |
 | `referenceLine` | `{ value, label? }` | — | Dashed threshold line |
+| `thresholdColors` | `{ value, above, below }` | — | Colour the line + fill by a y threshold — `above` colour above the limit, `below` below; split exactly on the limit |
 | `series[].dashed` | `boolean` | `false` | Render a series as a dashed line |
 | `grid` · `fill` · `badge` · `momentum` · `pulse` · `scrub` | `boolean` | `true` | Feature flags |
 | `showValue` | `boolean` | `false` | Large live value overlay |

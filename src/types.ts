@@ -15,6 +15,12 @@ export interface ReferenceLine {
   label?: string
 }
 
+export interface ThresholdColors {
+  value: number   // the y threshold (often === referenceLine.value)
+  above: string   // colour for segments above the threshold
+  below: string   // colour for segments below the threshold
+}
+
 export interface HoverPoint {
   time: number
   value: number
@@ -105,6 +111,7 @@ export interface LivelineProps {
 
   // Optional
   referenceLine?: ReferenceLine
+  thresholdColors?: ThresholdColors  // colour the line/fill by a y threshold (above/below)
   formatValue?: (v: number) => string
   formatTime?: (t: number) => string
   lerpSpeed?: number

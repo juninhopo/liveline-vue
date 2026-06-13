@@ -1,5 +1,5 @@
 import { onMounted, onBeforeUnmount, type Ref } from 'vue'
-import type { LivelinePoint, LivelinePalette, LivelineSeries, Momentum, ReferenceLine, HoverPoint, Padding, ChartLayout, OrderbookData, DegenOptions, BadgeVariant, CandlePoint } from './types'
+import type { LivelinePoint, LivelinePalette, LivelineSeries, Momentum, ReferenceLine, ThresholdColors, HoverPoint, Padding, ChartLayout, OrderbookData, DegenOptions, BadgeVariant, CandlePoint } from './types'
 import { lerp } from './math/lerp'
 import { computeRange } from './math/range'
 import { detectMomentum } from './math/momentum'
@@ -26,6 +26,7 @@ export interface EngineConfig {
   momentumOverride?: Momentum
   showFill: boolean
   referenceLine?: ReferenceLine
+  thresholdColors?: ThresholdColors
   formatValue: (v: number) => string
   formatTime: (t: number) => string
   padding: Required<Padding>
@@ -1736,6 +1737,7 @@ export function useLivelineEngine(
       showPulse: cfg.showPulse,
       showFill: cfg.showFill,
       referenceLine: cfg.referenceLine,
+      thresholdColors: cfg.thresholdColors,
       hoverX: drawHoverX,
       hoverValue: drawHoverValue,
       hoverTime: drawHoverTime,
